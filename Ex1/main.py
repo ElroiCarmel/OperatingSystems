@@ -32,11 +32,19 @@ def pcb_to_entry(pcb: dict) -> str:
 
 
 def main():
+    if not (len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == '-a')):
+        raise Exception("Invalid argument. The script should be run with no arguments or with '-a'.")
 
+    argv = sys.argv
+    curr_uid = os.getuid()
+    
     with open('det.txt', 'w') as details:
+        
         col = list(FIELDS)
         col[-1] = 'CommandName'
-        details.write(f'{'\t'.join(col)}\n')
+        col_str = '\t'.join(col)
+        details.write(f'{col_str}\n')
+        
         for pid in os.listdir(PROC_DIR):
             if pid.isdigit():
                 # print(pid)
@@ -44,7 +52,11 @@ def main():
                 with open(status_file, 'r') as f:
                     lines = f.readlines()
                     process_info = get_pcb(lines)
-                    details.write(f'{pcb_to_entry(process_info)}\n')
+                    if len(argv) == 2 or curr_uid == int(process_info['Uid']):
+                        details.write(f'{pcb_to_entry(process_info)}\n')
     
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
