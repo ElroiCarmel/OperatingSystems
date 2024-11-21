@@ -38,23 +38,22 @@ def main():
     argv = sys.argv
     curr_uid = os.getuid()
     
-    with open('det.txt', 'w') as details:
         
-        col = list(FIELDS)
-        col[-1] = 'CommandName'
-        col_str = '\t'.join(col)
-        details.write(f'{col_str}\n')
-        
-        for pid in os.listdir(PROC_DIR):
-            if pid.isdigit():
-                # print(pid)
-                status_file = os.path.join(PROC_DIR, pid, 'status')
-                with open(status_file, 'r') as f:
-                    lines = f.readlines()
-                    process_info = get_pcb(lines)
-                    if len(argv) == 2 or curr_uid == int(process_info['Uid']):
-                        details.write(f'{pcb_to_entry(process_info)}\n')
+    col = list(FIELDS)
+    col[-1] = 'CommandName'
+    col_str = '\t'.join(col)
+    print(f'{col_str}\n')
     
+    for pid in os.listdir(PROC_DIR):
+        if pid.isdigit():
+            # print(pid)
+            status_file = os.path.join(PROC_DIR, pid, 'status')
+            with open(status_file, 'r') as f:
+                lines = f.readlines()
+                process_info = get_pcb(lines)
+                if len(argv) == 2 or curr_uid == int(process_info['Uid']):
+                    print(f'{pcb_to_entry(process_info)}\n')
+
 if __name__ == '__main__':
     try:
         main()
