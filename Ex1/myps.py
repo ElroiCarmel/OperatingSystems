@@ -25,10 +25,7 @@ def get_pcb(raw) -> dict:
     return process_info
 
 def pcb_to_entry(pcb: dict) -> str:
-    attr = []
-    for field in FIELDS:
-        attr.append(pcb[field])
-    return '\t'.join(attr)
+    return '\t'.join([pcb[field] for field in FIELDS])
 
 
 def main():
@@ -42,7 +39,7 @@ def main():
     col = list(FIELDS)
     col[-1] = 'CommandName'
     col_str = '\t'.join(col)
-    print(f'{col_str}\n')
+    print(col_str)
     
     for pid in os.listdir(PROC_DIR):
         if pid.isdigit():
@@ -52,7 +49,7 @@ def main():
                 lines = f.readlines()
                 process_info = get_pcb(lines)
                 if len(argv) == 2 or curr_uid == int(process_info['Uid']):
-                    print(f'{pcb_to_entry(process_info)}\n')
+                    print(pcb_to_entry(process_info))
 
 if __name__ == '__main__':
     try:
