@@ -3,7 +3,7 @@ import os, pwd, sys, grp
 PROC_DIR = "/proc"
 FIELDS= ['Pid', 'PPid', 'Uid', 'Uname', 'Gid', 'Gname', 'State', 'Name']
 
-def get_pcb(raw) -> dict:
+def get_pcb(raw):
     process_info = {}
     for line in raw:
         if line.startswith('Pid:'):
@@ -24,7 +24,7 @@ def get_pcb(raw) -> dict:
             process_info['Name'] = line.split()[1]
     return process_info
 
-def pcb_to_entry(pcb: dict) -> str:
+def pcb_to_entry(pcb):
     return '\t'.join([pcb[field] for field in FIELDS])
 
 
@@ -43,7 +43,6 @@ def main():
     
     for pid in os.listdir(PROC_DIR):
         if pid.isdigit():
-            # print(pid)
             status_file = os.path.join(PROC_DIR, pid, 'status')
             with open(status_file, 'r') as f:
                 lines = f.readlines()
