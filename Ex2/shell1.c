@@ -18,14 +18,18 @@ int main() {
 	glob_t glob_struct;
 
     while (1) {
+
         fprintf(stdout, "%s: ", promptMessg);
         fgets(currCommand, 1024, stdin);
         currCommand[strlen(currCommand) - 1] = '\0'; // replace \n with \0
 
         if (strcmp(currCommand, "!!") == 0) {
-            command = lastCommand;
-        } else command = currCommand;
+            strcpy(currCommand, lastCommand);
+        } else {
+            strcpy(lastCommand, currCommand);
+        }
 
+        command = currCommand;
         /* parse command line */
         i = 0;
         token = strtok(command, " ");
@@ -113,6 +117,6 @@ int main() {
         if (amper == 0)
             wait(&status);
         
-        if (strcmp(currCommand, "!!") != 0) strcpy(lastCommand, currCommand);
+        if (&glob_struct != NULL) (&glob_struct);
     }
 }
