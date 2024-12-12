@@ -2,3 +2,5 @@
 DummyEx/
 *.out
 *myshell
+*sketch.c
+*.vscode*

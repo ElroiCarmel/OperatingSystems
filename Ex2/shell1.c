@@ -18,7 +18,7 @@ while (1) {
     printf("%s: ", promptMessg);
     fgets(command, 1024, stdin);
     command[strlen(command) - 1] = '\0'; // replace \n with \0
-
+    if (strcmp(command, "!!") != 0) {
     /* parse command line */
     i = 0;
     token = strtok (command," ");
@@ -41,7 +41,7 @@ while (1) {
         }
     else 
         amper = 0; 
-
+    }
     /* for commands not part of the shell command language */ 
     if (strcmp(argv[0], "prompt") == 0) {
         strcpy(promptMessg, argv[2]);
@@ -54,6 +54,13 @@ while (1) {
     }
     if (strcmp(argv[0], "quit") == 0) {
         return 0;
+    }
+
+    if (strcmp(argv[0], "cd") == 0) {
+        if (chdir(argv[1]) != 0) {
+            perror("Error occured!");
+        }
+        continue;
     }
     
 
