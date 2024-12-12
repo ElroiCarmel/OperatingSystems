@@ -88,7 +88,7 @@ int main() {
             continue;
         }
         if (strcmp(argv[0], "status") == 0) {
-            printf("%d\n", status);
+            printf("%d\n", status >> 8);
             continue;
         }
         if (strcmp(argv[0], "quit") == 0) {
