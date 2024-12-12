@@ -12,9 +12,10 @@ int i, amper, retid, status;
 char *argv[10];
 char command[1024];
 char *token;
+char promptMessg[100] = "hello";
 
 while (1) {
-    printf("hello: ");
+    printf("%s: ", promptMessg);
     fgets(command, 1024, stdin);
     command[strlen(command) - 1] = '\0'; // replace \n with \0
 
@@ -24,7 +25,7 @@ while (1) {
     while (token != NULL)
     {
         argv[i] = token;
-        token = strtok (NULL, " ");
+        token = strtok(NULL, " ");
         i++;
     }
     argv[i] = NULL;
@@ -42,12 +43,17 @@ while (1) {
         amper = 0; 
 
     /* for commands not part of the shell command language */ 
+    if (strcmp(argv[0], "prompt") == 0) {
+        strcpy(promptMessg, argv[2]);
+        continue;
+    }
+
 
     if (fork() == 0) { 
         execvp(argv[0], argv);
     }
     /* parent continues here */
     if (amper == 0)
-        wait(NULL);
+        wait(&status);
 }
 }

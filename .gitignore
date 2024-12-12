@@ -1,2 +1,4 @@
 *.txt
 DummyEx/
+*.out
+*myshell
