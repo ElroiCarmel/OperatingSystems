@@ -55,9 +55,12 @@ while (1) {
     if (strcmp(argv[0], "quit") == 0) {
         return 0;
     }
+    
 
     if (fork() == 0) { 
-        execvp(argv[0], argv);
+        if (strcmp(argv[0], "enviorment") == 0) { 
+        execlp("env","env", NULL);
+        }  else execvp(argv[0], argv);
     }
     /* parent continues here */
     if (amper == 0)
