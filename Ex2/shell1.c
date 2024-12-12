@@ -49,9 +49,9 @@ int main() {
         else 
             amper = 0; 
         
-        
+
         /* Deal with glob patterns */
-        if (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?')) {
+        if (strcmp(argv[0], "echo") && !amper && (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?'))) {
             
             result = glob(argv[i - 1], 0 , NULL, &glob_struct);
             /* check for errors */
@@ -73,6 +73,7 @@ int main() {
                 found++;
             }
             argv[i] = NULL;         
+        
         }
 
 
