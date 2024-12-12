@@ -1,10 +1,10 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include "stdio.h"
-#include "errno.h"
-#include "stdlib.h"
-#include "unistd.h"
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <glob.h>
 
@@ -18,7 +18,7 @@ int main() {
 	glob_t glob_struct;
 
     while (1) {
-        printf("%s: ", promptMessg);
+        fprintf(stdout, "%s: ", promptMessg);
         fgets(currCommand, 1024, stdin);
         currCommand[strlen(currCommand) - 1] = '\0'; // replace \n with \0
 
