@@ -6,14 +6,16 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include <string.h>
+#include <glob.h>
 
 int main() {
-    int i, amper, retid, status;
-    char *argv[10];
+    int i, amper, retid, status, result;
+    char *argv[50];
     char currCommand[1024], lastCommand[1024];
-    char *command;
-    char *token;
+    char *command, *token;
     char promptMessg[100] = "hello";
+    char **found;
+	glob_t glob_struct;
 
     while (1) {
         printf("%s: ", promptMessg);
@@ -23,7 +25,6 @@ int main() {
         if (strcmp(currCommand, "!!") == 0) {
             command = lastCommand;
         } else command = currCommand;
-
 
         /* parse command line */
         i = 0;
@@ -47,8 +48,35 @@ int main() {
             }
         else 
             amper = 0; 
+        
+        
+        /* Deal with glob patterns */
+        if (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?')) {
+            
+            result = glob(argv[i - 1], 0 , NULL, &glob_struct);
+            /* check for errors */
+            if( result!=0 )
+            {
+                if( result==GLOB_NOMATCH )
+                    fprintf(stderr,"No matches\n");
+                else
+                    fprintf(stderr,"Some error\n");
+                exit(1);
+            }
+            
+            argv[i - 1] = NULL;
+            i--;
+            found = glob_struct.gl_pathv;
+            while (*found)
+            {
+                argv[i++] = *found;
+                found++;
+            }
+            argv[i] = NULL;         
+        }
 
-        //}
+
+
         if (strcmp(argv[0], "prompt") == 0) {
             strcpy(promptMessg, argv[2]);
             status = 0;

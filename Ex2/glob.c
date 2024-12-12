@@ -20,7 +20,7 @@ int main()
 	}
 	
 	/* success, output found filenames */
-	printf("Found %d filename matches\n",glob_struct.gl_pathc);
+	printf("Found %ld filename matches\n",glob_struct.gl_pathc);
 	found = glob_struct.gl_pathv;
 	while(*found)
 	{
