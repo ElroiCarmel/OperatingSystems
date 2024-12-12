@@ -45,9 +45,13 @@ while (1) {
     /* for commands not part of the shell command language */ 
     if (strcmp(argv[0], "prompt") == 0) {
         strcpy(promptMessg, argv[2]);
+        status = 0;
         continue;
     }
-
+    if (strcmp(argv[0], "status") == 0) {
+        printf("%d\n", status);
+        continue;
+    }
 
     if (fork() == 0) { 
         execvp(argv[0], argv);
