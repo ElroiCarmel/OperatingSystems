@@ -8,69 +8,82 @@
 #include <string.h>
 
 int main() {
-int i, amper, retid, status;
-char *argv[10];
-char command[1024];
-char *token;
-char promptMessg[100] = "hello";
+    int i, amper, retid, status;
+    char *argv[10];
+    char currCommand[1024], lastCommand[1024];
+    char *command;
+    char *token;
+    char promptMessg[100] = "hello";
 
-while (1) {
-    printf("%s: ", promptMessg);
-    fgets(command, 1024, stdin);
-    command[strlen(command) - 1] = '\0'; // replace \n with \0
-    if (strcmp(command, "!!") != 0) {
-    /* parse command line */
-    i = 0;
-    token = strtok (command," ");
-    while (token != NULL)
-    {
-        argv[i] = token;
-        token = strtok(NULL, " ");
-        i++;
-    }
-    argv[i] = NULL;
+    while (1) {
+        printf("%s: ", promptMessg);
+        fgets(currCommand, 1024, stdin);
+        currCommand[strlen(currCommand) - 1] = '\0'; // replace \n with \0
 
-    /* Is command empty */ 
-    if (argv[0] == NULL)
-        continue;
+        if (strcmp(currCommand, "!!") == 0) {
+            command = lastCommand;
+        } else command = currCommand;
 
-    /* Does command line end with & */ 
-    if (! strcmp(argv[i - 1], "&")) {
-        amper = 1;
-        argv[i - 1] = NULL;
+
+        /* parse command line */
+        i = 0;
+        token = strtok(command, " ");
+        while (token != NULL)
+        {
+            argv[i] = token;
+            token = strtok(NULL, " ");
+            i++;
         }
-    else 
-        amper = 0; 
-    }
-    /* for commands not part of the shell command language */ 
-    if (strcmp(argv[0], "prompt") == 0) {
-        strcpy(promptMessg, argv[2]);
-        status = 0;
-        continue;
-    }
-    if (strcmp(argv[0], "status") == 0) {
-        printf("%d\n", status);
-        continue;
-    }
-    if (strcmp(argv[0], "quit") == 0) {
-        return 0;
-    }
+        argv[i] = NULL;
 
-    if (strcmp(argv[0], "cd") == 0) {
-        if (chdir(argv[1]) != 0) {
-            perror("Error occured!");
+        /* Is command empty */ 
+        if (argv[0] == NULL)
+            continue;
+
+        /* Does command line end with & */ 
+        if (!strcmp(argv[i - 1], "&")) {
+            amper = 1;
+            argv[i - 1] = NULL;
+            }
+        else 
+            amper = 0; 
+
+        //}
+        if (strcmp(argv[0], "prompt") == 0) {
+            strcpy(promptMessg, argv[2]);
+            status = 0;
+            continue;
         }
-        continue;
-    }
-    
+        if (strcmp(argv[0], "status") == 0) {
+            printf("%d\n", status);
+            continue;
+        }
+        if (strcmp(argv[0], "quit") == 0) {
+            exit(0);
+        }
 
-    if (fork() == 0) { 
-        if (strcmp(argv[0], "enviorment") == 0) { 
-        execlp("env","env", NULL);
-        }  else execvp(argv[0], argv);
+        if (strcmp(argv[0], "cd") == 0) {
+            if (chdir(argv[1]) != 0) {
+                perror("Error occured!");
+            }
+            continue;
+        }
+        
+        /* for commands not part of the shell command language */ 
+        if (fork() == 0) { 
+            if (strcmp(argv[0], "enviorment") == 0) { 
+            execlp("env","env", NULL);
+            }  else{
+                if (execvp(argv[0], argv) != 0) {
+                    perror("Command failed..\n");
+                    exit(EXIT_FAILURE);
+                }
+            } 
+        }
+        /* parent continues here */
+        if (amper == 0)
+            wait(&status);
+        
+        if (strcmp(currCommand, "!!") != 0) strcpy(lastCommand, currCommand);
     }
-    /* parent continues here */
-    if (amper == 0)
-        wait(&status);
-}
 }
