@@ -52,6 +52,9 @@ while (1) {
         printf("%d\n", status);
         continue;
     }
+    if (strcmp(argv[0], "quit") == 0) {
+        return 0;
+    }
 
     if (fork() == 0) { 
         execvp(argv[0], argv);
