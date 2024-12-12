@@ -117,6 +117,6 @@ int main() {
         if (amper == 0)
             wait(&status);
         
-        if (&glob_struct != NULL) (&glob_struct);
+
     }
 }
