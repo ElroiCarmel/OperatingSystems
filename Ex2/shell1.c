@@ -20,6 +20,7 @@ int main() {
     while (1) {
 
         fprintf(stdout, "%s: ", promptMessg);
+        fflush(stdout);
         fgets(currCommand, 1024, stdin);
         currCommand[strlen(currCommand) - 1] = '\0'; // replace \n with \0
 
