@@ -11,7 +11,7 @@
 int count(char *str, char c);
 
 int main() {
-    int i, amper = 0, retid, status, result;
+    int i, amper = 0, retid, status, result, glob_activated = 0;
     char *argv[50];
     char currCommand[1024], lastCommand[1024];
     char *command, *token;
@@ -60,7 +60,9 @@ int main() {
         /* Deal with glob patterns */
         if (!amper && (count(argv[i - 1], '*') == 1 || count(argv[i - 1], '?') == 1) && (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?'))) {
             
+            glob_activated = 1;
             result = glob(argv[i - 1], 0 , NULL, &glob_struct);
+            
             /* check for errors */
             if(result != 0)
             {
@@ -81,7 +83,7 @@ int main() {
             }
             argv[i] = NULL;         
         
-        }
+        } else glob_activated = 0;
 
 
 
@@ -119,6 +121,7 @@ int main() {
         /* parent continues here */
         } else if (cpid > 0) {
             if (amper == 0) waitpid(cpid, &status, 0);
+            if (glob_activated) globfree(&glob_struct);
         }
     }
 }
