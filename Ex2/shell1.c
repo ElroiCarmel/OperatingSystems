@@ -8,8 +8,10 @@
 #include <string.h>
 #include <glob.h>
 
+int count(char *str, char c);
+
 int main() {
-    int i, amper, retid, status, result;
+    int i, amper = 0, retid, status, result;
     char *argv[50];
     char currCommand[1024], lastCommand[1024];
     char *command, *token;
@@ -56,13 +58,13 @@ int main() {
         
 
         /* Deal with glob patterns */
-        if (strcmp(argv[0], "echo") && !amper && (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?'))) {
+        if (!amper && (count(argv[i - 1], '*') == 1 || count(argv[i - 1], '?') == 1) && (strchr(argv[i - 1], '*') || strchr(argv[i - 1], '?'))) {
             
             result = glob(argv[i - 1], 0 , NULL, &glob_struct);
             /* check for errors */
-            if( result!=0 )
+            if(result != 0)
             {
-                if( result==GLOB_NOMATCH )
+                if(result == GLOB_NOMATCH)
                     fprintf(stderr,"No matches\n");
                 else
                     fprintf(stderr,"Some error\n");
@@ -103,21 +105,30 @@ int main() {
             continue;
         }
         
-        /* for commands not part of the shell command language */ 
-        if (fork() == 0) { 
+        /* for commands not part of the shell command language */
+        pid_t cpid = fork();
+        if (cpid == 0) { 
             if (strcmp(argv[0], "enviorment") == 0) { 
             execlp("env","env", NULL);
-            }  else{
-                if (execvp(argv[0], argv) != 0) {
-                    perror("Command failed..\n");
-                    exit(EXIT_FAILURE);
-                }
+            } else {
+                execvp(argv[0], argv);
+                perror("Command failed..\n");
+                exit(EXIT_FAILURE);
+                
             } 
-        }
         /* parent continues here */
-        if (amper == 0)
-            wait(&status);
-        
-
+        } else if (cpid > 0) {
+            if (amper == 0) waitpid(cpid, &status, 0);
+        }
     }
 }
+
+int count(char *str, char c) {
+    int ans = 0;
+    while (*str) {
+        if (*str == c) ans++;
+        str++;
+    }
+    return ans;
+}
+
