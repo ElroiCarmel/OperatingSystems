@@ -15,13 +15,13 @@ int main() {
     char *argv[50];
     char currCommand[1024], lastCommand[1024];
     char *command, *token;
-    char promptMessg[100] = "hello";
+    char promptMessg[100] = "hello:";
     char **found;
 	glob_t glob_struct;
 
     while (1) {
 
-        fprintf(stdout, "%s: ", promptMessg);
+        fprintf(stdout, "%s ", promptMessg);
         fflush(stdout);
         fgets(currCommand, 1024, stdin);
         currCommand[strlen(currCommand) - 1] = '\0'; // replace \n with \0
