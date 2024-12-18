@@ -110,7 +110,7 @@ int main() {
         /* for commands not part of the shell command language */
         pid_t cpid = fork();
         if (cpid == 0) { 
-            if (strcmp(argv[0], "enviorment") == 0) { 
+            if (strcmp(argv[0], "environment") == 0) { 
             execlp("env","env", NULL);
             } else {
                 execvp(argv[0], argv);
