@@ -13,13 +13,16 @@
 #define RED_STDERROR 4
 #define RED_STDOUT_APP 8
 
+void readRedirect(char **args, int argc, unsigned char *flag, char **outfile);
+void execRedirect(unsigned char flag, char *fname);
+
 int main()
 {
     char command[1024];
     char *token;
-    char *outfile, *infile;
+    char *file_redirect;
     int i, fd, amper, retid, status;
-    unsigned char redirect = 0;
+    unsigned char redirect;
     char *argv[10];
 
     while (1)
@@ -52,42 +55,8 @@ int main()
         else
             amper = 0;
 
-        if (argv[i - 2] && !strcmp(argv[i - 2], ">"))
-        {
-            redirect |= RED_STDOUT;
-            argv[i - 2] = NULL;
-            outfile = argv[i - 1];
-        }
-        else
-            redirect &= ~RED_STDOUT;
-
-        if (argv[i - 2] && !strcmp(argv[i - 2], "2>"))
-        {
-            redirect |= RED_STDERROR;
-            argv[i - 2] = NULL;
-            outfile = argv[i - 1];
-        }
-        else
-            redirect &= ~RED_STDERROR;
-
-        if (argv[i - 2] && !strcmp(argv[i - 2], "<"))
-        {
-            redirect |= RED_STDIN;
-            argv[i - 2] = NULL;
-            infile = argv[i - 1];
-        }
-        else
-            redirect &= ~RED_STDIN;
-
-        if (argv[i - 2] && !strcmp(argv[i - 2], ">>"))
-        {
-            redirect |= RED_STDOUT_APP;
-            argv[i - 2] = NULL;
-            outfile = argv[i - 1];
-        }
-        else
-            redirect &= ~RED_STDOUT_APP;
-
+        redirect = 0;
+        readRedirect(argv, i, &redirect, &file_redirect);
         /* for commands not part of the shell command language */
 
         pid_t childPid = fork();
@@ -99,91 +68,111 @@ int main()
         if (childPid == 0)
         {
             /* redirection of IO ? */
-            if (redirect & RED_STDOUT)
-            {
-                fd = creat(outfile, 0660);
-                if (fd < 0)
-                {
-                    perror("creat");
-                    exit(1);
-                }
-                if (dup2(fd, STDOUT_FILENO) < 0)
-                {
-                    perror("dup2");
-                    exit(1);
-                }
-                if (close(fd) < 0)
-                {
-                    perror("close");
-                    exit(1);
-                }
-                /* stdout is now redirected */
-            }
-            if (redirect & RED_STDERROR)
-            {
-                fd = creat(outfile, 0660);
-                if (fd < 0)
-                {
-                    perror("creat");
-                    exit(1);
-                }
-                if (dup2(fd, STDERR_FILENO) < 0)
-                {
-                    perror("dup2");
-                    exit(1);
-                }
-                if (close(fd) < 0)
-                {
-                    perror("close");
-                    exit(1);
-                }
-                /* stderror is now redirected */
-            }
-            if (redirect & RED_STDIN)
-            {
-                fd = open(infile, O_RDONLY);
-                if (fd < 0)
-                {
-                    perror("open");
-                    exit(1);
-                }
-                if (dup2(fd, STDIN_FILENO) < 0)
-                {
-                    perror("dup2");
-                    exit(1);
-                }
-                if (close(fd) < 0)
-                {
-                    perror("close");
-                    exit(1);
-                }
-                /* stdin is now redirected */
-            }
-            if (redirect & RED_STDOUT_APP)
-            {
-                fd = open(outfile, O_CREAT|O_APPEND|O_WRONLY, 0660);
-                if (fd < 0)
-                {
-                    perror("open");
-                    exit(1);
-                }
-                if (dup2(fd, STDOUT_FILENO) < 0)
-                {
-                    perror("dup2");
-                    exit(1);
-                }
-                if (close(fd) < 0)
-                {
-                    perror("close");
-                    exit(1);
-                }
-                /* stdout is now redirected */
-            }
-            
+            execRedirect(redirect, file_redirect);
             execvp(argv[0], argv);
         }
         /* parent continues here */
         if (amper == 0)
             retid = wait(&status);
+    }
+}
+
+void readRedirect(char **argv, int argc, unsigned char *flag, char **file_name)
+{
+    if (argv[argc - 2] && !strcmp(argv[argc - 2], ">"))
+    {
+        *flag |= RED_STDOUT;
+        argv[argc - 2] = NULL;
+        *file_name = argv[argc - 1];
+    }
+    else if (argv[argc - 2] && !strcmp(argv[argc - 2], "2>"))
+    {
+        *flag |= RED_STDERROR;
+        argv[argc - 2] = NULL;
+        *file_name = argv[argc - 1];
+    }
+    else if (argv[argc - 2] && !strcmp(argv[argc - 2], "<"))
+    {
+        *flag |= RED_STDIN;
+        argv[argc - 2] = NULL;
+        *file_name = argv[argc - 1];
+    }
+    else if (argv[argc - 2] && !strcmp(argv[argc - 2], ">>"))
+    {
+        *flag |= RED_STDOUT_APP;
+        argv[argc - 2] = NULL;
+        *file_name = argv[argc - 1];
+    }
+}
+
+void execRedirect(unsigned char flag, char *fname)
+{
+    int fd = -1;
+    if (flag & RED_STDOUT)
+    {
+        fd = creat(fname, 0660);
+        if (fd < 0)
+        {
+            perror("creat");
+            exit(1);
+        }
+        if (dup2(fd, STDOUT_FILENO) < 0)
+        {
+            perror("dup2");
+            exit(1);
+        }
+
+        /* stdout is now redirected */
+    }
+    else if (flag & RED_STDERROR)
+    {
+        fd = creat(fname, 0660);
+        if (fd < 0)
+        {
+            perror("creat");
+            exit(1);
+        }
+        if (dup2(fd, STDERR_FILENO) < 0)
+        {
+            perror("dup2");
+            exit(1);
+        }
+
+        /* stderror is now redirected */
+    }
+    else if (flag & RED_STDIN)
+    {
+        fd = open(fname, O_RDONLY);
+        if (fd < 0)
+        {
+            perror("open");
+            exit(1);
+        }
+        if (dup2(fd, STDIN_FILENO) < 0)
+        {
+            perror("dup2");
+            exit(1);
+        }
+
+        /* stdin is now redirected */
+    }
+    else if (flag & RED_STDOUT_APP)
+    {
+        fd = open(fname, O_CREAT | O_APPEND | O_WRONLY, 0660);
+        if (fd < 0)
+        {
+            perror("open");
+            exit(1);
+        }
+        if (dup2(fd, STDOUT_FILENO) < 0)
+        {
+            perror("dup2");
+            exit(1);
+        }
+    }
+    if (flag && fd && close(fd) < 0)
+    {
+        perror("close");
+        exit(1);
     }
 }
