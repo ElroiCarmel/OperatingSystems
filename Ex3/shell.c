@@ -15,15 +15,17 @@
 
 void readRedirect(char **args, int argc, unsigned char *flag, char **outfile);
 void execRedirect(unsigned char flag, char *fname);
+int parseCommand(char *command, char **argv);
+int parsePipes(char *input, char**pipes);
 
 int main()
 {
     char command[1024];
     char *token;
     char *file_redirect;
-    int i, fd, amper, retid, status;
+    int i, fd, amper, retid, status, pipec;
     unsigned char redirect;
-    char *argv[10];
+    char *argv[10], *pipes[16];
 
     while (1)
     {
@@ -31,16 +33,11 @@ int main()
         fgets(command, 1024, stdin);
         command[strlen(command) - 1] = '\0';
 
+        pipec = parsePipes(command, pipes);
+
         /* parse command line */
-        i = 0;
-        token = strtok(command, " ");
-        while (token != NULL)
-        {
-            argv[i] = token;
-            token = strtok(NULL, " ");
-            i++;
-        }
-        argv[i] = NULL;
+        i = parseCommand(command, argv);
+        
 
         /* Is command empty */
         if (argv[0] == NULL)
@@ -175,4 +172,33 @@ void execRedirect(unsigned char flag, char *fname)
         perror("close");
         exit(1);
     }
+}
+
+int parseCommand(char *command, char **argv)
+{
+    int i = 0;
+    char *token;
+    token = strtok(command, " ");
+    while (token != NULL)
+    {
+        argv[i] = token;
+        token = strtok(NULL, " ");
+        i++;
+    }
+    argv[i] = NULL;
+    return i;
+}
+
+int parsePipes(char *input, char**pipes)
+{
+    int i = 0;
+    char *token;
+    token = strtok(input, "|");
+    while (token != NULL)
+    {
+        pipes[i] = token;
+        token = strtok(NULL, "|");
+        i++;
+    }
+    return i;
 }
