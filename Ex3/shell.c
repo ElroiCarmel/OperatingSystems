@@ -16,7 +16,8 @@
 void readRedirect(char **args, int argc, unsigned char *flag, char **outfile);
 void execRedirect(unsigned char flag, char *fname);
 int parseCommand(char *command, char **argv);
-int parsePipes(char *input, char**pipes);
+int parsePipes(char *input, char **pipes);
+void execPipe(char **commands, int c);
 
 int main()
 {
@@ -34,10 +35,14 @@ int main()
         command[strlen(command) - 1] = '\0';
 
         pipec = parsePipes(command, pipes);
+        if (pipec > 1)
+        {
+            execPipe(pipes, pipec);
+            continue;
+        }
 
         /* parse command line */
         i = parseCommand(command, argv);
-        
 
         /* Is command empty */
         if (argv[0] == NULL)
@@ -70,7 +75,7 @@ int main()
         }
         /* parent continues here */
         if (amper == 0)
-            retid = wait(&status);
+            retid = waitpid(childPid, &status, 0);
     }
 }
 
@@ -189,7 +194,7 @@ int parseCommand(char *command, char **argv)
     return i;
 }
 
-int parsePipes(char *input, char**pipes)
+int parsePipes(char *input, char **pipes)
 {
     int i = 0;
     char *token;
@@ -201,4 +206,62 @@ int parsePipes(char *input, char**pipes)
         i++;
     }
     return i;
+}
+
+void execPipe(char **commands, int c)
+{
+    int i, pfd[2], in = -1;
+    char *argv[10];
+    pid_t pid;
+    unsigned char redFlag = 0;
+    char *outfile;
+
+    for (i = 0; i < c; i++)
+    {
+        pipe(pfd);
+
+        if ((pid = fork()) == 0)
+        {
+            // Parse the current command
+            int argc = parseCommand(commands[i], argv);
+
+            // Redirect input if necessary
+            if (in != -1)
+            {
+                dup2(in, STDIN_FILENO); // Redirect stdin to the previous pipe
+                close(in);
+            }
+
+            // Redirect output if it's not the last command
+            if (i != c - 1)
+            {
+                dup2(pfd[1], STDOUT_FILENO); // Redirect stdout to the current pipe
+            } else { // If it's the last command allow redirection to a file
+                readRedirect(argv, argc, &redFlag, &outfile);
+                execRedirect(redFlag, outfile);
+            }
+
+            // Close unused pipe ends
+            close(pfd[0]);
+            close(pfd[1]);
+
+            // Execute the command
+            execvp(argv[0], argv);
+            perror("execvp"); // If execvp fails
+            exit(1);
+        }
+
+        // Parent process: Close unused pipe ends
+        close(pfd[1]);
+        if (in != -1)
+        {
+            close(in); // Close the previous pipe's read-end
+        }
+
+        // Update `in` to the current pipe's read-end for the next command
+        in = pfd[0];
+    }
+
+    // Wait for the last child process to finish
+    while (waitpid(pid, NULL, 0) > 0);
 }
