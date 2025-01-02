@@ -6,18 +6,22 @@
 #include "stdlib.h"
 #include "unistd.h"
 #include <string.h>
+#include <signal.h>
 
 void executeCommand(char *command, int isPiped);
 void executePipeline(char *pipeCommands[], int pipec);
 int parseCommand(char *command, char *argv[]);
 int parsePipeline(char *raw, char *pipes[]);
 void redirectCommand(char *argv[], int argc);
+void handler();
 
 int main()
 {
     char command[1024];
     char *pipes[15];
     int pipec;
+
+    signal(SIGINT, handler);
 
     while (1)
     {
@@ -226,4 +230,9 @@ void executePipeline(char *pipeCommands[], int pipec)
         }
         prev_fd = pfd[0]; // Update prev_fd to the current pipe's read-end
     }
+}
+
+void handler()
+{
+    printf("You typed Control-C!\n");
 }
