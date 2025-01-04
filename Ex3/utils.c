@@ -116,6 +116,11 @@ void redirectCommand(char *argv[], int argc)
 
 int parsePipeline(char *raw, char *pipes[])
 {
+    // make an exception for the 'echo' command
+    char first[20] = {0};
+    if(strlen(raw) >= 5) strncpy(first, raw, 4);
+    if (strcmp(first, "echo") == 0) return 1;
+    
     int count = 0;
     char *token;
     token = strtok(raw, "|");

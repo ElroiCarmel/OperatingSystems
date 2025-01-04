@@ -1,11 +1,11 @@
 CC = gcc
-TARGETS = shell pipe_ls2wc
+TARGETS = myshell pipe_ls2wc
 
 all: $(TARGETS)
 
 .PHONY: all clean
 
-shell: shell.o utils.o
+myshell: shell.o utils.o
 	$(CC) $^ -o $@
 
 shell.o: shell.c utils.h
