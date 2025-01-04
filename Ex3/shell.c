@@ -204,30 +204,63 @@ void executePipeline(char *pipeCommands[], int pipec)
         }
 
         pid_t cpid = fork();
-        if (cpid == 0)
+        if (cpid < 0)
+        {
+            perror("fork");
+            exit(1);
+        }
+        else if (cpid == 0)
         {
             // Child process
             if (prev_fd != -1)
             {
-                dup2(prev_fd, STDIN_FILENO); // Redirect stdin to the previous pipe
-                close(prev_fd);
+                if (dup2(prev_fd, STDIN_FILENO) < 0) // Redirect stdin to the previous pipe
+                {
+                    perror("dup2");
+                    exit(1);
+                }
+                if (close(prev_fd) < 0)
+                {
+                    perror("close");
+                    exit(1);
+                }
             }
             if (i != pipec - 1)
             {
-                dup2(pfd[1], STDOUT_FILENO); // Redirect stdout to the current pipe
+                if (dup2(pfd[1], STDOUT_FILENO) < 0) // Redirect stdout to the current pipe
+                {
+                    perror("dup2");
+                    exit(1);
+                }
             }
-            close(pfd[0]); // Close unused read-end of the current pipe
-            close(pfd[1]);
+            if (close(pfd[0]) < 0) // Close unused read-end of the current pipe
+            {
+                perror("close");
+                exit(1);
+            }
+            if (close(pfd[1]) < 0)
+            {
+                perror("close");
+                exit(1);
+            }
 
             executeCommand(pipeCommands[i], 1);
         }
 
         waitpid(cpid, NULL, 0);
         // Parent process
-        close(pfd[1]); // Close unused write-end of the current pipe
+        if (close(pfd[1]) < 0) // Close unused write-end of the current pipe
+        {
+            perror("close");
+            exit(1);
+        }
         if (prev_fd != -1)
         {
-            close(prev_fd); // Close the previous pipe's read-end
+            if (close(prev_fd) < 0) // Close the previous pipe's read-end
+            {
+                perror("close");
+                exit(1);
+            }
         }
         prev_fd = pfd[0]; // Update prev_fd to the current pipe's read-end
     }
